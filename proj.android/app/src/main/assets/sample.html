@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <script src='bridge.js'></script>
+    <script type="text/javascript">    	
+    	function chooseImages() {
+    		webBridge.callAppRouter('imageChoose', '{\"multi\":0}', function(err, res) {
+							var _name = 'unknown';
+              if (err !== 0) {
+                  _name = "FAILED!";
+              } else {
+              	  setTimeout("alert('SUCCESSED')", 20);
+              }
+          });
+    	}
+    </script>
+</head>
+
+<body style="background:red;">
+	  <div style="background:#888888;"><br><br>&nbsp;&nbsp;<button onclick="history.back()">返回</button><br><br></div><br>
+    <p id="demo">图片选择</p>
+		<button id="nativeBtn" onclick="chooseImages()">Native-试一下</button>		
+	 </script>
+</body>
+
+</html>

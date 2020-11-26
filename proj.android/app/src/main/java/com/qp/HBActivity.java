@@ -37,8 +37,12 @@ public class HBActivity extends AppCompatActivity {
         webView.initHybrid(this);
         webView.setWebChromeClient(new QChromeWebClient());
 
-        //LOAD URL
-        webView.loadUrl("http://download.jinyunhui.com:81/test/TEST_INDEX.html");
+        loadURL("file:///android_asset/sample.html");
+    }
+
+    private void loadURL(String url){
+        Logger.log("[Trace@H5App] load URL ="+url);
+        webView.loadUrl(url);
     }
 
     @Override
