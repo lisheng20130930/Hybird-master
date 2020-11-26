@@ -15,11 +15,21 @@
               }
           });
     	}
+
+    	function exitApp(){
+    	    // CALL BRIDGE EXIT DIRECTLY
+    	    bridge.exitApp();
+    	}
+
+    	webBridge.onKeyback(function() {
+          webBridge.trace("keyback  call back now");
+          return 0;
+        });
     </script>
 </head>
 
-<body style="background:red;">
-	  <div style="background:#888888;"><br><br>&nbsp;&nbsp;<button onclick="history.back()">返回</button><br><br></div><br>
+<body>
+	  <div style="background:#888888;"><br><br>&nbsp;&nbsp;<button onclick="exitApp()">返回</button><br><br></div><br>
     <p id="demo">图片选择</p>
 		<button id="nativeBtn" onclick="chooseImages()">Native-试一下</button>		
 	 </script>
