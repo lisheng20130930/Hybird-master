@@ -4,9 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -21,19 +18,24 @@ import com.qp.hybird.HBWebView;
 import com.qp.hybird.R;
 import com.qp.utils.Logger;
 
-public class HBActivity extends AppCompatActivity {
+import butterknife.BindView;
+
+public class HBActivity extends EsActivity {
     protected static final FrameLayout.LayoutParams COVER_SCREEN_PARAMS = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
     private View customView;
     private FrameLayout fullscreenContainer;
     private WebChromeClient.CustomViewCallback customViewCallback;
-    private HBWebView webView = null;
+
+    @BindView(R.id.iv_web_view)
+    HBWebView webView;
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_hybird);
+    protected int getLayoutId() {
+        return R.layout.activity_hybird;
+    }
 
-        webView = (HBWebView)findViewById(R.id.iv_web_view);
+    @Override
+    protected void initEventAndData() {
         webView.initHybrid(this);
         webView.setWebChromeClient(new QChromeWebClient());
 
@@ -58,14 +60,11 @@ public class HBActivity extends AppCompatActivity {
         webView.onActivityResult(requestCode, resultCode, data);
     }
 
-    /** 视频播放全屏 **/
     static class FullscreenHolder extends FrameLayout {
-
         public FullscreenHolder(Context ctx) {
             super(ctx);
             setBackgroundColor(ctx.getResources().getColor(android.R.color.black));
         }
-
         @Override
         public boolean onTouchEvent(MotionEvent evt) {
             return true;
@@ -119,7 +118,6 @@ public class HBActivity extends AppCompatActivity {
         customViewCallback = callback;
     }
 
-    /** 隐藏视频全屏 */
     private void hideCustomView() {
         if (customView == null) {
             return;
