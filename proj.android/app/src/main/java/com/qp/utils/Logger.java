@@ -1,6 +1,6 @@
 package com.qp.utils;
 
-import com.qp.EsApp;
+import com.qp.BaseApp;
 
 import java.io.FileOutputStream;
 
@@ -9,7 +9,7 @@ import java.io.FileOutputStream;
  */
 public class Logger {
 	//public static String strPath = Environment.getExternalStorageDirectory().getPath() + "/Demo_LOG.txt";
-	public static String strPath = EsApp.getInstance().getFilesDir().getPath() + "/Demo.log";
+	public static String strPath = BaseApp.getInstance().getFilesDir().getPath() + "/Demo.log";
 
 	/**
 	 * LOG

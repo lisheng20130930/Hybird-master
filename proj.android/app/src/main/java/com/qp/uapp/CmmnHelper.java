@@ -5,19 +5,20 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
+import android.content.res.AssetManager;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.telephony.TelephonyManager;
 
-import com.qp.EsApp;
+import com.qp.BaseApp;
 import com.qp.utils.SharedPreferenceUtil;
 
 public class CmmnHelper {
     public static int getVersionCode(){
-        PackageManager packageManager = EsApp.getInstance().getPackageManager();
+        PackageManager packageManager = BaseApp.getInstance().getPackageManager();
         int versionCode = 0;
         try{
-            PackageInfo packInfo = packageManager.getPackageInfo(EsApp.getInstance().getPackageName(),0);
+            PackageInfo packInfo = packageManager.getPackageInfo(BaseApp.getInstance().getPackageName(),0);
             versionCode = packInfo.versionCode;
         }catch (Exception e){
         }
@@ -25,9 +26,9 @@ public class CmmnHelper {
     }
 
     public static String getVersionName(){
-        PackageManager packageManager = EsApp.getInstance().getPackageManager();
+        PackageManager packageManager = BaseApp.getInstance().getPackageManager();
         try{
-            PackageInfo packInfo = packageManager.getPackageInfo(EsApp.getInstance().getPackageName(),0);
+            PackageInfo packInfo = packageManager.getPackageInfo(BaseApp.getInstance().getPackageName(),0);
             return packInfo.versionName;
         }catch (Exception e){
         }
@@ -45,7 +46,7 @@ public class CmmnHelper {
     }
 
     public static boolean isNetworkConnected() {
-        ConnectivityManager connectivityManager = (ConnectivityManager)EsApp.getInstance().getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager connectivityManager = (ConnectivityManager) BaseApp.getInstance().getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         return connectivityManager.getActiveNetworkInfo() != null;
     }
 
@@ -64,12 +65,12 @@ public class CmmnHelper {
     }
 
     public static String getDeviceID(){
-        String deviceID = SharedPreferenceUtil.getString(EsApp.getInstance(),"device_uuid");
+        String deviceID = SharedPreferenceUtil.getString(BaseApp.getInstance(),"device_uuid");
         if(deviceID!=null&&deviceID.length()>5){
             return deviceID;
         }
-        deviceID = getIMEI(EsApp.getInstance());
-        SharedPreferenceUtil.setString(EsApp.getInstance(),"device_uuid",deviceID);
+        deviceID = getIMEI(BaseApp.getInstance());
+        SharedPreferenceUtil.setString(BaseApp.getInstance(),"device_uuid",deviceID);
         return deviceID;
     }
 
@@ -84,7 +85,19 @@ public class CmmnHelper {
     }
 
     public static String getDataDir(){
-        String pszDataDir = EsApp.getInstance().getFilesDir().toString();
+        String pszDataDir = BaseApp.getInstance().getFilesDir().toString();
         return pszDataDir;
     }
+
+    /* nativeInit */
+    public static native void nativeInit(AssetManager pAssetManager, String strDataDir);
+    /* nativeLoop */
+    public static native void nativeLoop();
+    /* native uinit */
+    public static native void nativeUint();
+
+    /*
+     * LOG
+     */
+    public static native void log(String log);
 }

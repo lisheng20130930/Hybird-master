@@ -41,7 +41,7 @@
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
-        android:name="com.qp.EsApp"
+        android:name="com.qp.BaseApp"
         android:allowBackup="true"
         android:networkSecurityConfig="@xml/network_security_config"
         android:icon="@drawable/icon"

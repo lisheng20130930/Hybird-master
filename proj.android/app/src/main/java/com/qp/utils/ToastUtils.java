@@ -2,7 +2,7 @@ package com.qp.utils;
 
 import android.widget.Toast;
 
-import com.qp.EsApp;
+import com.qp.BaseApp;
 
 /**
  * @author Listen.Li
@@ -12,7 +12,7 @@ public class ToastUtils {
 
     public static void show(String msg) {
         if (toast == null) {
-            toast = Toast.makeText(EsApp.getInstance(), msg, Toast.LENGTH_LONG);
+            toast = Toast.makeText(BaseApp.getInstance(), msg, Toast.LENGTH_LONG);
         } else {
             toast.setText(msg);
         }
@@ -21,7 +21,7 @@ public class ToastUtils {
 
     public static void show(int msg) {
         if (toast == null) {
-            toast = Toast.makeText(EsApp.getInstance(), msg + "", Toast.LENGTH_LONG);
+            toast = Toast.makeText(BaseApp.getInstance(), msg + "", Toast.LENGTH_LONG);
         } else {
             toast.setText(msg + "");
         }
