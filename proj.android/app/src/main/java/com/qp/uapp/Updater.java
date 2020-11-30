@@ -23,7 +23,7 @@ public class Updater {
         HttpManager.request("POST", szUrl, params, new HttpManager.HttpCallBack() {
             @Override
             public void handle(int status, String res) {
-                callBack.onLaunchCallBack(status,res);
+                callBack.onLaunchCallBack((200==status)?0:(-1),res);
             }
         });
     }

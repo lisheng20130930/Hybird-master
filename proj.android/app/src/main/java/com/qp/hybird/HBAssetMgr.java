@@ -8,5 +8,5 @@ public class HBAssetMgr{
     public static native int assetMgrGetStatus();
     public static native void assetMgrRemoveALL();
     public static native void assetMgrClear();
-    public static native int assetMgrVersionCode();
+    public static native long assetMgrVersionCode();
 }

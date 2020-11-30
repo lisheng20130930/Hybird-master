@@ -17,6 +17,7 @@ import com.qp.hybird.R;
 import com.qp.net.FileDownload;
 import com.qp.utils.DataCleanManager;
 import com.qp.utils.Logger;
+import com.qp.utils.SharedPreferenceUtil;
 
 import org.json.JSONObject;
 
@@ -30,9 +31,10 @@ public class LaunchActivity extends EsActivity implements Updater.ILaunchCallBac
     TextView mIVLabel;
     @BindView(R.id.iv_jump)
     TextView  mJumpLabel;
-    private static int BASIC_REQUEST_CODE = 130;
-    private Handler handler = new Handler();
-    private int recLen = 5;
+    static int BASIC_REQUEST_CODE = 130;
+    Handler handler = new Handler();
+    boolean bIsFirstLaunch = false;
+    int recLen = 5;
 
     private Runnable cbHotupdate = new Runnable(){
         @Override
@@ -66,9 +68,8 @@ public class LaunchActivity extends EsActivity implements Updater.ILaunchCallBac
         public void run() {
             recLen--;
             mJumpLabel.setText("跳过 " + recLen);
-            if (recLen < 0) {
+            if (recLen <= 0) {
                 handler.removeCallbacks(cbCountdown);
-                mJumpLabel.setVisibility(View.GONE);
                 gotoMainActivity();
             }else{
                 handler.postDelayed(cbCountdown,1000);
@@ -90,13 +91,39 @@ public class LaunchActivity extends EsActivity implements Updater.ILaunchCallBac
         return R.layout.activity_launch;
     }
 
-    @Override
-    protected void initEventAndData() {
-        Updater.appLaunch(AppConstants.SERVICE_URL, this);
+    protected boolean isFirstLaunch(){
+        String szKey = "KEY_firstLaunch";
+        String value = SharedPreferenceUtil.getString(this, szKey);
+        if(value.length()>0){
+            return false;
+        }
+        SharedPreferenceUtil.setString(this, szKey,"NO");
+        Logger.log("[Trace@LaunchActivity] first Launch = YES");
+        return true;
     }
 
     @Override
-    public void onLaunchCallBack(int errorCode, String str) {
+    protected void initEventAndData() {
+        bIsFirstLaunch = isFirstLaunch();
+        if (!isTaskRoot()) {
+            finish();
+            return;
+        }
+        mJumpLabel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                handler.removeCallbacks(cbCountdown);
+                Logger.log("[Trace@LaunchActivity] skip Clicked at("+recLen+")seconds");
+                gotoMainActivity();
+            }
+        });
+        mJumpLabel.setVisibility(View.GONE);
+        Logger.log("[Client@H5App] action=launch&&deviceID="+CmmnHelper.getDeviceID()+"&&channelId="+ AppConstants.CHANNELID+"&&version="+CmmnHelper.getVersionCode()+"&&isNewDevice="+(bIsFirstLaunch?"YES":"NO"));
+        Logger.log("[Trace@DeviceInfo] mobileInfo="+ CmmnHelper.deviceInfo());
+        Updater.appLaunch(AppConstants.G_SERVICE, this);
+    }
+
+    protected void checkVersionUpdateRealDo(int errorCode, String str){
         Logger.log("[Trace@LaunchActivity] checkVersionUpdateRealDo errorCode="+errorCode);
         if(errorCode!=0) { // ERROR
             startCountDown(false);
@@ -107,7 +134,6 @@ public class LaunchActivity extends EsActivity implements Updater.ILaunchCallBac
         String szUrl = null;
         try {
             JSONObject json = new JSONObject(str);
-            //get code first+
             int responseCode = json.getInt("code");
             if(200==responseCode) {
                 updateTag = json.getInt("updateTag");
@@ -119,7 +145,6 @@ public class LaunchActivity extends EsActivity implements Updater.ILaunchCallBac
             e.printStackTrace();
         }
 
-        //热更
         if(updateTag==1 && null!=szUrl) {
             mIVLabel.setVisibility(View.VISIBLE);
             HBAssetMgr.assetMgrSetConfig(szUrl);
@@ -127,7 +152,6 @@ public class LaunchActivity extends EsActivity implements Updater.ILaunchCallBac
             return;
         }
 
-        //整包更新
         if(updateTag==2 && null!=szUrl){
             final String _szUrl = szUrl;
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -144,6 +168,16 @@ public class LaunchActivity extends EsActivity implements Updater.ILaunchCallBac
             return;
         }
         startCountDown(false);
+    }
+
+    @Override
+    public void onLaunchCallBack(int errorCode, String str) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                checkVersionUpdateRealDo(errorCode,str);
+            }
+        });
     }
 
     public static final String SAVE_PATH = Environment.getExternalStorageDirectory().getAbsolutePath()+"/h5app.apk";

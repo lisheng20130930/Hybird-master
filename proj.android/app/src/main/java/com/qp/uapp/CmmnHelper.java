@@ -13,6 +13,9 @@ import android.telephony.TelephonyManager;
 import com.qp.BaseApp;
 import com.qp.utils.SharedPreferenceUtil;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class CmmnHelper {
     public static int getVersionCode(){
         PackageManager packageManager = BaseApp.getInstance().getPackageManager();
@@ -87,6 +90,17 @@ public class CmmnHelper {
     public static String getDataDir(){
         String pszDataDir = BaseApp.getInstance().getFilesDir().toString();
         return pszDataDir;
+    }
+
+    public static String deviceInfo(){
+        Map<String,String> map = new HashMap<String,String>();
+        map.put("manufacturer", Build.MANUFACTURER);
+        map.put("model", Build.MODEL);
+        map.put("brand", Build.BRAND);
+        map.put("device", Build.DEVICE);
+        map.put("android", Build.VERSION.RELEASE);
+        map.put("deviceID", getDeviceID());
+        return map.toString();
     }
 
     /* nativeInit */
