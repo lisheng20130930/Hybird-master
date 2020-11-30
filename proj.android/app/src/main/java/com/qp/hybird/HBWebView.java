@@ -76,12 +76,12 @@ public class HBWebView extends WebView {
         settings.setAllowUniversalAccessFromFileURLs(true);
     }
 
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        bridge.onRequestPermissionsResult(requestCode,permissions,grantResults);
+    public boolean onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        return bridge.onRequestPermissionsResult(requestCode,permissions,grantResults);
     }
 
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        bridge.onActivityResult(requestCode,resultCode,data);
+    public boolean onActivityResult(int requestCode, int resultCode, Intent data) {
+        return bridge.onActivityResult(requestCode,resultCode,data);
     }
 
     private class QWebViewClient extends WebViewClient{

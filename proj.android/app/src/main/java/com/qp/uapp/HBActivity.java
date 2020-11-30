@@ -1,9 +1,12 @@
-package com.qp;
+package com.qp.uapp;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -14,9 +17,19 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.widget.FrameLayout;
 
+import com.qp.EsActivity;
+import com.qp.hybird.BuildConfig;
+import com.qp.hybird.HBPlugin;
 import com.qp.hybird.HBWebView;
 import com.qp.hybird.R;
 import com.qp.utils.Logger;
+import com.zhihu.matisse.Matisse;
+import com.zhihu.matisse.MimeType;
+import com.zhihu.matisse.engine.impl.GlideEngine;
+import com.zhihu.matisse.internal.entity.CaptureStrategy;
+
+import java.util.List;
+import java.util.Set;
 
 import butterknife.BindView;
 
@@ -25,6 +38,7 @@ public class HBActivity extends EsActivity {
     private View customView;
     private FrameLayout fullscreenContainer;
     private WebChromeClient.CustomViewCallback customViewCallback;
+    private static final int MEDIA_REQUEST = 320;
 
     @BindView(R.id.iv_web_view)
     HBWebView webView;
@@ -36,10 +50,10 @@ public class HBActivity extends EsActivity {
 
     @Override
     protected void initEventAndData() {
+        HBPlugin.registerExtender(new HBExtender());
         webView.initHybrid(this);
         webView.setWebChromeClient(new QChromeWebClient());
-
-        loadURL("file:///android_asset/sample.html");
+        loadURL("file:///android_asset/fileInput.html");
     }
 
     private void loadURL(String url){
@@ -54,10 +68,28 @@ public class HBActivity extends EsActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Logger.log("[Trace@H5App] onActivityResult requestCode="+requestCode+",resultCode="+resultCode);
-        super.onActivityResult(requestCode, resultCode, data);
-        webView.onActivityResult(requestCode, resultCode, data);
+    public void onPermissionsGranted(int requestCode, @NonNull List<String> perms) {
+        if(requestCode!=MEDIA_REQUEST||_filePathCallback==null){
+            return;
+        }
+        if(!hasPermissions(Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.CAMERA,
+                Manifest.permission.ACCESS_COARSE_LOCATION)){
+            _showFileChooser();
+        }else{
+            _filePathCallback.onReceiveValue(new Uri[]{});
+            _filePathCallback = null;
+        }
+    }
+
+    @Override
+    public void onPermissionsDenied(int requestCode, @NonNull List<String> perms) {
+        if(requestCode!=MEDIA_REQUEST||_filePathCallback==null){
+            return;
+        }
+        _filePathCallback.onReceiveValue(new Uri[]{});
+        _filePathCallback = null;
     }
 
     static class FullscreenHolder extends FrameLayout {
@@ -103,6 +135,32 @@ public class HBActivity extends EsActivity {
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Logger.log("[Trace@H5App] onActivityResult requestCode="+requestCode+",resultCode="+resultCode);
+        super.onActivityResult(requestCode, resultCode, data);
+        if(MEDIA_REQUEST==requestCode && null!=_filePathCallback){
+            Uri result[] = null;
+            if(resultCode!=RESULT_OK || MEDIA_REQUEST!=requestCode && null==data){
+                result = new Uri[]{};
+            }else {
+                List<String> medias = Matisse.obtainPathResult(data);
+                if (medias.size() <= 0) {
+                    result = new Uri[]{};
+                } else {
+                    result = new Uri[medias.size()];
+                    for (int i = 0; i < medias.size(); i++) {
+                        result[i] = Uri.parse("file://" + medias.get(i));
+                    }
+                }
+            }
+            _filePathCallback.onReceiveValue(result);
+            _filePathCallback = null;
+        }else {
+            webView.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
     private void showCustomView(View view, WebChromeClient.CustomViewCallback callback) {
         if (customView != null) {
             callback.onCustomViewHidden();
@@ -131,6 +189,52 @@ public class HBActivity extends EsActivity {
         customViewCallback.onCustomViewHidden();
     }
 
+    private ValueCallback<Uri[]> _filePathCallback = null;
+    private String _acctypes[] = null;
+
+    private boolean _showFileChooser(){
+        Set<MimeType> mimeTypes = null;
+        if(_acctypes[0].contains("image")){
+            mimeTypes = MimeType.of(MimeType.JPEG,MimeType.PNG);
+        }else if(_acctypes[0].contains("vedio")){
+            mimeTypes = MimeType.of(MimeType.MP4,MimeType.THREEGPP);
+        }else{
+            mimeTypes = MimeType.of(MimeType.JPEG,MimeType.PNG,MimeType.MP4,MimeType.THREEGPP);
+        }
+        Matisse.from(HBActivity.this)
+                .choose(mimeTypes)
+                .maxSelectablePerMediaType(9,1)
+                .countable(false)
+                .showSingleMediaType(true)
+                .restrictOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED)
+                .thumbnailScale(0.85F)
+                .imageEngine(new GlideEngine())
+                .captureStrategy(new CaptureStrategy(true, BuildConfig.APPLICATION_ID+".fileprovider"))
+                .capture(true)
+                .forResult(MEDIA_REQUEST);
+        return true;
+    }
+
+    private boolean showFileChooser(String acctypes[], ValueCallback<Uri[]> filePathCallback){
+        if(null != _filePathCallback){
+            _filePathCallback.onReceiveValue(null);
+            _filePathCallback = null;
+        }
+        _filePathCallback = filePathCallback;
+        _acctypes = acctypes;
+        if(!hasPermissions(Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.CAMERA,
+                Manifest.permission.ACCESS_COARSE_LOCATION)){
+            requestPermissions(MEDIA_REQUEST, Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.ACCESS_COARSE_LOCATION);
+            return true;
+        }
+        return _showFileChooser();
+    }
+
     private class QChromeWebClient extends WebChromeClient {
         public void onGeolocationPermissionsShowPrompt(String origin, android.webkit.GeolocationPermissions.Callback callback) {
             callback.invoke(origin, true, true);
@@ -138,7 +242,14 @@ public class HBActivity extends EsActivity {
         }
 
         public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
-            return super.onShowFileChooser(webView,filePathCallback,fileChooserParams);
+            String acctypes[] = null;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                acctypes = fileChooserParams.getAcceptTypes();
+            }
+            if(acctypes==null||acctypes.length<=0){
+                return false;
+            }
+            return showFileChooser(acctypes,filePathCallback);
         }
 
         @Override

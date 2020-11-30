@@ -20,6 +20,8 @@ import com.zhihu.matisse.ui.MatisseActivity;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 public abstract class HBPlugin {
@@ -60,7 +62,22 @@ public abstract class HBPlugin {
         if(method.equals(M_mediaChoose)){
             return new M_MediaChoose(cbName,reqStr);
         }
+        for(IPlugExtender extender : extenderList){
+            HBPluginBase plug = extender.getInstance(cbName,method,reqStr);
+            if(null!=plug){
+                return plug;
+            }
+        }
         return new M_UnSupported(cbName,reqStr);
+    }
+
+    private static List<IPlugExtender> extenderList = new LinkedList<>();
+    public static void registerExtender(IPlugExtender extender){
+        extenderList.add(extender);
+    }
+
+    public interface IPlugExtender{
+        HBPluginBase getInstance(String cbName, String method, String reqStr);
     }
 
     protected static class M_ImageChoose extends HBPluginBase {
