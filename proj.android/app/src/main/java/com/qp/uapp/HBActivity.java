@@ -72,12 +72,11 @@ public class HBActivity extends EsActivity {
         if(requestCode!=MEDIA_REQUEST||_filePathCallback==null){
             return;
         }
-        if(!hasPermissions(Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.CAMERA,
-                Manifest.permission.ACCESS_COARSE_LOCATION)){
+        if(hasPermissions(Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE)){
             _showFileChooser();
         }else{
+            showMsg("权限未允许");
             _filePathCallback.onReceiveValue(new Uri[]{});
             _filePathCallback = null;
         }
@@ -209,8 +208,6 @@ public class HBActivity extends EsActivity {
                 .restrictOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED)
                 .thumbnailScale(0.85F)
                 .imageEngine(new GlideEngine())
-                .captureStrategy(new CaptureStrategy(true, BuildConfig.APPLICATION_ID+".fileprovider"))
-                .capture(true)
                 .forResult(MEDIA_REQUEST);
         return true;
     }
@@ -223,13 +220,9 @@ public class HBActivity extends EsActivity {
         _filePathCallback = filePathCallback;
         _acctypes = acctypes;
         if(!hasPermissions(Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.CAMERA,
-                Manifest.permission.ACCESS_COARSE_LOCATION)){
+                Manifest.permission.READ_EXTERNAL_STORAGE)){
             requestPermissions(MEDIA_REQUEST, Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.CAMERA,
-                    Manifest.permission.ACCESS_COARSE_LOCATION);
+                    Manifest.permission.READ_EXTERNAL_STORAGE);
             return true;
         }
         return _showFileChooser();

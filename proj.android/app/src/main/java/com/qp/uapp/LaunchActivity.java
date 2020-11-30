@@ -5,10 +5,12 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.TextView;
 
 import com.qp.EsActivity;
@@ -35,6 +37,12 @@ public class LaunchActivity extends EsActivity implements Updater.ILaunchCallBac
     Handler handler = new Handler();
     boolean bIsFirstLaunch = false;
     int recLen = 5;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+        super.onCreate(savedInstanceState);
+    }
 
     private Runnable cbHotupdate = new Runnable(){
         @Override
