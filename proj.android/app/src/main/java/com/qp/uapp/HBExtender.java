@@ -4,6 +4,8 @@ import com.qp.hybird.HBJSBridge.HBPluginBase;
 import com.qp.hybird.HBPlugin.IPlugExtender;
 
 public class HBExtender implements IPlugExtender {
+    public static final String M_aliasPushId = "aliasPushId";
+    public static final String M_offlineUsrId = "offlineUsrId";
     public static final String M_vedioChatInit = "vedioChatInit";
     public static final String M_vedioChatUint = "vedioChatUint";
     public static final String M_vedioChatWaiting = "vedioChatWaiting";

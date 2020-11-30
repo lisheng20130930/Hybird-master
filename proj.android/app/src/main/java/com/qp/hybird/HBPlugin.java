@@ -38,8 +38,6 @@ public abstract class HBPlugin {
     public static final String M_networkStatus = "networkStatus";
     public static final String M_setCookie = "setCookie";
     public static final String M_mediaChoose = "mediaChoose";
-    public static final String M_aliasPushId = "aliasPushId";
-    public static final String M_offlineUsrId = "offlineUsrId";
     public static final String M_downloadAndShare = "downloadAndShare";
     public static final String M_mapNav = "mapNav";
     public static final String M_img2Album = "img2Album";
