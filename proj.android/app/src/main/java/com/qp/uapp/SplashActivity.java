@@ -2,7 +2,8 @@ package com.qp.uapp;
 
 import com.qp.EsActivity;
 
-public class LaunchActivity extends EsActivity {
+public class SplashActivity extends EsActivity {
+
     @Override
     protected int getLayoutId() {
         return 0;

@@ -9,6 +9,11 @@ public class EsApp extends Application {
 
     private static EsApp instance;
 
+    /* load so */
+    static {
+        System.loadLibrary("qpBase");
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
