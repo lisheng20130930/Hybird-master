@@ -5,9 +5,9 @@ import android.app.Application;
 /**
  * @author Listen.Li
  */
-public class App extends Application {
+public class EsApp extends Application {
 
-    private static App instance;
+    private static EsApp instance;
 
     @Override
     public void onCreate() {
@@ -15,7 +15,7 @@ public class App extends Application {
         instance = this;
     }
 
-    public static App getInstance() {
+    public static EsApp getInstance() {
         return instance;
     }
 }
