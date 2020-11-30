@@ -26,11 +26,6 @@ import java.util.Set;
 
 public abstract class HBPlugin {
     public static final String M_getDeviceInfo = "getDeviceInfo";
-    public static final String M_vedioChatInit = "vedioChatInit";
-    public static final String M_vedioChatUint = "vedioChatUint";
-    public static final String M_vedioChatWaiting = "vedioChatWaiting";
-    public static final String M_vedioChatGiveup = "vedioChatGiveup";
-    public static final String M_vedioChatCall2 = "vedioChatCall2";
     public static final String M_imageChoose  = "imageChoose";
     public static final String M_fileUpload    = "fileUpload";
     public static final String M_localStorerage    = "localStorerage";
@@ -41,7 +36,6 @@ public abstract class HBPlugin {
     public static final String M_clearCache = "clearCache";
     public static final String M_videoChoose = "videoChoose";
     public static final String M_networkStatus = "networkStatus";
-    public static final String M_invokeGxbao = "invokeGxbao";
     public static final String M_setCookie = "setCookie";
     public static final String M_mediaChoose = "mediaChoose";
     public static final String M_aliasPushId = "aliasPushId";
@@ -51,9 +45,6 @@ public abstract class HBPlugin {
     public static final String M_img2Album = "img2Album";
     public static final String M_setStartImg = "setStartImg";
     public static final String M_cacheSize = "cacheSize";
-    public static final String M_invokeEShare = "invokeEShare";
-    public static final String M_invokeEFenQi = "invokeEFenQi";
-    public static final String M_invokeEFenQiVisaSDK = "invokeEFenQiVisaSDK";
 
     public static HBPluginBase getInstance(String cbName, String method, String reqStr){
         if(method.equals(M_imageChoose)){
