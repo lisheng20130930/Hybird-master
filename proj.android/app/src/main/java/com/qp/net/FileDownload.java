@@ -2,54 +2,82 @@ package com.qp.net;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class FileDownload {
+    private static FileDownload instance;
+    private OkHttpClient mOkHttpClient;
 
-    public static void download(String szURL,String filePathName, OnDownloadListener listener){
-        new Thread() {
-            public void run() {
-                try {
-                    URL url = new URL(szURL);
-                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                    con.setReadTimeout(15000);
-                    con.setConnectTimeout(15000);
-                    con.setRequestProperty("Charset", "UTF-8");
-                    con.setRequestMethod("GET");
-                    if (con.getResponseCode() == 200) {
-                        int length = con.getContentLength();
-                        InputStream is = con.getInputStream();
-                        FileOutputStream fileOutputStream = null;
-                        if (is != null) {
-                            File file = new File(filePathName);
-                            fileOutputStream = new FileOutputStream(file);
-                            byte[] buf = new byte[4096];
-                            int ch;
-                            long process = 0;
-                            while ((ch = is.read(buf)) != -1) {
-                                fileOutputStream.write(buf, 0, ch);
-                                process += ch;
-                                listener.onDownloading((int)(process*100/length));
-                            }
-                        }
-                        if (fileOutputStream != null) {
-                            fileOutputStream.flush();
-                            fileOutputStream.close();
-                        }
-                        listener.onDownloadSuccess(filePathName);
-                    }
-                } catch (Exception e) {
-                    listener.onDownloadFailed(e);
-                }
-            }
-        }.start();
+    private FileDownload() {
+        mOkHttpClient = new OkHttpClient();
     }
 
-    public interface OnDownloadListener{
-        void onDownloadSuccess(String filePathName);
+    public static FileDownload getInstance() {
+        if (instance == null) {
+            synchronized (FileDownload.class) {
+                if (instance == null) {
+                    instance = new FileDownload();
+                }
+            }
+        }
+        return instance;
+    }
+
+    public void download(String url, String filePathName, final OnDownloadListener listener) {
+        Request request = new Request.Builder().url(url).build();
+        mOkHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                listener.onDownloadFailed();
+            }
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                InputStream is = null;
+                byte[] buf = new byte[2048];
+                int len = 0;
+                FileOutputStream fos = null;
+                try {
+                    is = response.body().byteStream();
+                    long total = response.body().contentLength();
+                    File file = new File(filePathName);
+                    fos = new FileOutputStream(file);
+                    long sum = 0;
+                    while ((len = is.read(buf)) != -1) {
+                        fos.write(buf, 0, len);
+                        sum += len;
+                        int progress = (int) (sum * 1.0f / total * 100);
+                        listener.onDownloading(progress);
+                    }
+                    fos.flush();
+                    listener.onDownloadSuccess();
+                } catch (Exception e) {
+                    listener.onDownloadFailed();
+                } finally {
+                    try {
+                        if (is != null)
+                            is.close();
+                    } catch (IOException e) {
+                    }
+                    try {
+                        if (fos != null)
+                            fos.close();
+                    } catch (IOException e) {
+                    }
+                }
+            }
+        });
+    }
+
+    public interface OnDownloadListener {
+        void onDownloadSuccess();
         void onDownloading(int progress);
-        void onDownloadFailed(Exception e);
+        void onDownloadFailed();
     }
 }

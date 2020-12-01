@@ -20,7 +20,31 @@ import okhttp3.Response;
 
 
 public class FileUpload {
-    public static void uploadFile(File file, String requestURL, OnUploadListener listener){
+    private static FileUpload instance;
+    private OkHttpClient mOkHttpClient;
+
+    private FileUpload() {
+        mOkHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(120,TimeUnit.SECONDS)
+                .readTimeout(120, TimeUnit.SECONDS)
+                .writeTimeout(120,TimeUnit.SECONDS)
+                .callTimeout(300, TimeUnit.SECONDS)
+                .retryOnConnectionFailure(false)
+                .build();
+    }
+
+    public static FileUpload getInstance() {
+        if (instance == null) {
+            synchronized (FileUpload.class) {
+                if (instance == null) {
+                    instance = new FileUpload();
+                }
+            }
+        }
+        return instance;
+    }
+
+    public void upload(File file, String requestURL, OnUploadListener listener){
         MultipartBody.Builder requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM);
         RequestBody body = RequestBody.create(MediaType.parse("application/octet-stream"), file);
         String filename = null;
@@ -40,14 +64,8 @@ public class FileUpload {
             builder.addHeader("Cookie", sCookie);
         }
         Request request = builder.build();
-        new OkHttpClient.Builder()
-                .connectTimeout(120,TimeUnit.SECONDS)
-                .readTimeout(120, TimeUnit.SECONDS)
-                .writeTimeout(120,TimeUnit.SECONDS)
-                .callTimeout(300, TimeUnit.SECONDS)
-                .retryOnConnectionFailure(false)
-                .build()
-                .newCall(request).enqueue(new Callback() {
+
+        mOkHttpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 Logger.log("[Trace@OKHttp] Error ====>"+e.getMessage());

@@ -85,14 +85,14 @@ public class HttpManager {
         mOkHttpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                callBack.onFailure(request, e);
+                callBack.onError();
             }
             @Override
             public void onResponse(Call call, Response response) throws IOException{
                 if (response.isSuccessful()) {
                     callBack.onSuccess(response);
                 } else {
-                    callBack.onError(response);
+                    callBack.onError();
                 }
             }
         });
@@ -100,7 +100,6 @@ public class HttpManager {
 
     public interface MyCallBack {
         void onSuccess(Response response);
-        void onFailure(Request request, Exception e);
-        void onError(Response response);
+        void onError();
     }
 }
