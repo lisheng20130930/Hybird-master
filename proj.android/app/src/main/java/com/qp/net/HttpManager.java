@@ -1,189 +1,106 @@
 package com.qp.net;
 
-import android.webkit.CookieManager;
-
-import com.qp.utils.Logger;
-
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.util.HashMap;
+import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class HttpManager {
-    private static ExecutorService pool = Executors.newFixedThreadPool(1);
-    public static volatile int counter = 0;
+    private static HttpManager instance;
+    private OkHttpClient mOkHttpClient;
 
-    public static String buildQuery(Map<String,Object> map){
-        StringBuilder stringBuilder = new StringBuilder();
-        if(!map.isEmpty()){
-            for (Map.Entry<String, Object> entry : map.entrySet()) {
-                String value = entry.getValue().toString();
-                if(value==null||value.equals("null")){
-                    continue;
-                }
-                stringBuilder.append(entry.getKey());
-                stringBuilder.append("=");
-                stringBuilder.append(URLEncoder.encode(value));
-                stringBuilder.append("&");
-            }
-            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-        }
-        return stringBuilder.toString();
+    private HttpManager() {
+        mOkHttpClient = (new OkHttpClient()).newBuilder()
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .build();
     }
 
-    public static String getUrlByMap(String url, Map<String,Object> map){
-        if(null==url || url.length()==0 || map == null){
-            return url;
+    public static HttpManager getInstance() {
+        if (instance == null) {
+            synchronized (HttpManager.class) {
+                if (instance == null) {
+                    instance = new HttpManager();
+                }
+            }
         }
-        StringBuilder stringBuilder = new StringBuilder(url);
-        if(!map.isEmpty()){
-            stringBuilder.append("?");
-            stringBuilder.append(buildQuery(map));
-        }
-        return stringBuilder.toString();
+        return instance;
     }
 
-    private static Map<String,Object> httpGet(String szUrl){
-        HttpURLConnection connection = null;
-        InputStreamReader in = null;
-        String result = "";
-        int status = 0;
-        try {
-            URL url = new URL(szUrl);
-            connection = (HttpURLConnection)url.openConnection();
-            connection.setConnectTimeout(35000);
-            connection.setReadTimeout(35000);
-            CookieManager cookieManager = CookieManager.getInstance();
-            String  sCookie = cookieManager.getCookie(szUrl);
-            if(null!=sCookie) {
-                connection.setRequestProperty("Cookie", sCookie);
-            }
-            connection.connect();
-            status = connection.getResponseCode();
-            if(status == 200){
-                in = new InputStreamReader(connection.getInputStream());
-                BufferedReader bufferedReader = new BufferedReader(in);
-                StringBuffer strBuffer = new StringBuffer();
-                String line = null;
-                while ((line = bufferedReader.readLine()) != null) {
-                    strBuffer.append(line);
-                }
-                result = strBuffer.toString();
-            }else{
-                result = "";
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        Map<String,Object> r = new HashMap<>();
-        r.put("status",status);
-        r.put("res",result);
-        return r;
+    public void get(String url, MyCallBack callBack) {
+        Request request = bulidRequestForGet(url);
+        requestNetWork(request, callBack);
     }
 
-    private static Map<String,Object> sendPost(String szUrl,String params) {
-        HttpURLConnection connection = null;
-        InputStreamReader in = null;
-        String result = "";
-        int status = 0;
-        try {
-            URL url = new URL(szUrl);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setConnectTimeout(35000);
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Cache-control", "no-cache");
-            connection.setReadTimeout(35000);
-            connection.setDoInput(true);
-            connection.setDoOutput(true);
-            connection.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
-            CookieManager cookieManager = CookieManager.getInstance();
-            String  sCookie = cookieManager.getCookie(szUrl);
-            if(null!=sCookie) {
-                connection.setRequestProperty("Cookie", sCookie);
-            }
-            DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-            wr.write(params.getBytes("UTF-8"));
-            wr.flush();
-            wr.close();
-            status = connection.getResponseCode();
-            if(status == 200){
-                in = new InputStreamReader(connection.getInputStream());
-                BufferedReader bufferedReader = new BufferedReader(in);
-                StringBuffer strBuffer = new StringBuffer();
-                String line = null;
-                while ((line = bufferedReader.readLine()) != null) {
-                    strBuffer.append(line);
-                }
-                result = strBuffer.toString();
-            }else{
-                result = "";
-            }
-        }catch (Exception e) {
-            e.printStackTrace();
-        }finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        Map<String,Object> r = new HashMap<>();
-        r.put("status",status);
-        r.put("res",result);
-        return r;
+    public void postWithFormData(String url, Map<String, String> parms, MyCallBack callBack) {
+        Request request = bulidRequestForPostByForm(url, parms);
+        requestNetWork(request, callBack);
     }
 
-    public static void request(String method, String szUrl, Map<String,Object> params, HttpCallBack handler){
-        counter ++;
-        pool.submit(new Runnable() {
+    public void postWithJson(String url, String json, MyCallBack callBack) {
+        Request request = bulidRequestForPostByJson(url, json);
+        requestNetWork(request, callBack);
+    }
+
+    private Request bulidRequestForPostByJson(String url, String json) {
+        RequestBody body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json);
+        return new Request.Builder()
+                .url(url)
+                .post(body)
+                .build();
+    }
+
+    private Request bulidRequestForPostByForm(String url, Map<String, String> parms) {
+        FormBody.Builder builder = new FormBody.Builder();
+        if (parms != null) {
+            for (Map.Entry<String, String> entry :
+                    parms.entrySet()) {
+                builder.add(entry.getKey(), entry.getValue());
+            }
+        }
+        FormBody body = builder.build();
+        return new Request.Builder()
+                .url(url)
+                .post(body)
+                .build();
+    }
+
+    private Request bulidRequestForGet(String url) {
+        return new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+    }
+
+    private void requestNetWork(Request request, MyCallBack callBack) {
+        mOkHttpClient.newCall(request).enqueue(new Callback() {
             @Override
-            public void run() {
-                Map<String,Object> r = null;
-                if(method.toLowerCase().equals("get")){
-                    r = httpGet(getUrlByMap(szUrl,params));
-                }else if(method.toLowerCase().equals("post")){
-                    r = sendPost(szUrl,buildQuery(params));
+            public void onFailure(Call call, IOException e) {
+                callBack.onFailure(request, e);
+            }
+            @Override
+            public void onResponse(Call call, Response response) throws IOException{
+                if (response.isSuccessful()) {
+                    callBack.onSuccess(response);
+                } else {
+                    callBack.onError(response);
                 }
-                handler.handle(((Integer)(r.get("status"))),(String)r.get("res"));
-                counter--;
-                Logger.log("[Trace@HttpManager] ======COUNTER = "+counter);
             }
         });
     }
 
-    public static void clear(){
-        try {
-            pool.shutdownNow();
-            pool = null;
-        }catch (Exception e){
-            Logger.log("[Trace@HttpManager] ===>"+e.getMessage());
-        }
-    }
-
-    public interface HttpCallBack{
-        void handle(int status, String res);
+    public interface MyCallBack {
+        void onSuccess(Response response);
+        void onFailure(Request request, Exception e);
+        void onError(Response response);
     }
 }

@@ -8,7 +8,6 @@ import android.support.v4.content.FileProvider;
 
 import com.qp.hybird.BuildConfig;
 import com.qp.hybird.HBAssetMgr;
-import com.qp.net.HttpManager;
 
 import java.io.File;
 import java.util.HashMap;

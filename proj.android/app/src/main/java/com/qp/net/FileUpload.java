@@ -1,92 +1,67 @@
 package com.qp.net;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.UUID;
 import android.webkit.CookieManager;
-
 import com.qp.utils.Logger;
+import com.qp.utils.MD5Util;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 
 public class FileUpload {
-    private static final String TAG = "uploadFile";
-    private static final int TIME_OUT = 10*10000000; //超时时间
-    private static final String CHARSET = "utf-8"; //设置编码
-
-    public static String uploadFile(File file,String RequestURL) {
-        String BOUNDARY = UUID.randomUUID().toString();
-        String PREFIX = "--" ;
-        String LINE_END = "\r\n";
-        String CONTENT_TYPE = "multipart/form-data";
-        String result = "";
-
+    public static void uploadFile(File file, String requestURL, OnUploadListener listener){
+        MultipartBody.Builder requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM);
+        RequestBody body = RequestBody.create(MediaType.parse("application/octet-stream"), file);
+        String filename = null;
         try {
-            URL url = new URL(RequestURL);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection(); conn.setReadTimeout(TIME_OUT); conn.setConnectTimeout(TIME_OUT);
-            conn.setDoInput(true); //允许输入流
-            conn.setDoOutput(true); //允许输出流
-            conn.setUseCaches(false); //不允许使用缓存
-            conn.setRequestMethod("POST"); //请求方式
-            conn.setRequestProperty("Charset", CHARSET);//设置编码
-            conn.setRequestProperty("connection", "keep-alive");
-            conn.setRequestProperty("Content-Type", CONTENT_TYPE + ";boundary=" + BOUNDARY);
-
-            CookieManager cookieManager = CookieManager.getInstance();
-            String  sCookie = cookieManager.getCookie(RequestURL);
-            if(null!=sCookie) {
-                conn.setRequestProperty("Cookie", sCookie);
-            }
-
-            if(file!=null) {
-                OutputStream outputSteam=conn.getOutputStream();
-                DataOutputStream dos = new DataOutputStream(outputSteam);
-                StringBuffer sb = new StringBuffer();
-                sb.append(PREFIX);
-                sb.append(BOUNDARY); sb.append(LINE_END);
-
-                sb.append("Content-Disposition: form-data; name=\"file\"; filename=\""+file.getName()+"\""+LINE_END);
-                sb.append("Content-Type: application/octet-stream; charset="+CHARSET+LINE_END);
-                sb.append(LINE_END);
-                dos.write(sb.toString().getBytes());
-                InputStream is = new FileInputStream(file);
-                byte[] bytes = new byte[1024];
-                int len = 0;
-                while((len=is.read(bytes))!=-1){
-                    dos.write(bytes, 0, len);
-                }
-                is.close();
-                dos.write(LINE_END.getBytes());
-                byte[] end_data = (PREFIX+BOUNDARY+PREFIX+LINE_END).getBytes();
-                dos.write(end_data);
-                dos.flush();
-                int res = conn.getResponseCode();
-                if(res==200){
-                    InputStreamReader in = new InputStreamReader(conn.getInputStream());
-                    BufferedReader bufferedReader = new BufferedReader(in);
-                    StringBuffer strBuffer = new StringBuffer();
-                    String line = null;
-                    while ((line = bufferedReader.readLine()) != null) {
-                        strBuffer.append(line);
-                    }
-                    result = strBuffer.toString();
-                    return result;
-                }else{
-                    Logger.log("[Trace@FileUpload] upload Error: response code:"+res);
-                    result = null;
-                }
-            }
-        } catch (Exception e){
-            Logger.log("[Trace@FileUpload] upload Error (2)==>"+e.getMessage());
-            e.printStackTrace();
+            filename = URLEncoder.encode(file.getName(), "UTF-8");
+        }catch (Exception e){
+            filename = MD5Util.MD5(file.getName());
+            Logger.log("[Exception@FileUpload] pos=00M&&message="+e.getMessage());
         }
+        requestBody.addFormDataPart("file", filename, body);
+        CookieManager cookieManager = CookieManager.getInstance();
+        String  sCookie = cookieManager.getCookie(requestURL);
+        Request.Builder builder = new Request.Builder();
+        builder.url(requestURL)
+                .post(requestBody.build());
+        if(sCookie!=null&&sCookie.length()>0){
+            builder.addHeader("Cookie", sCookie);
+        }
+        Request request = builder.build();
+        new OkHttpClient.Builder()
+                .connectTimeout(120,TimeUnit.SECONDS)
+                .readTimeout(120, TimeUnit.SECONDS)
+                .writeTimeout(120,TimeUnit.SECONDS)
+                .callTimeout(300, TimeUnit.SECONDS)
+                .retryOnConnectionFailure(false)
+                .build()
+                .newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Logger.log("[Trace@OKHttp] Error ====>"+e.getMessage());
+                listener.onUploadCallback(500,"{}");
+            }
 
-        return null;
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                listener.onUploadCallback(200,response.body().string());
+            }
+        });
+    }
+
+    public interface OnUploadListener{
+        void onUploadCallback(int status, String res);
     }
 }
