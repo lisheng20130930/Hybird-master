@@ -15,7 +15,6 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import okhttp3.Response;
 
 public class Updater {
     public static void appLaunch(String szUrl, ILaunchCallBack callBack){
@@ -23,7 +22,7 @@ public class Updater {
         params.put("versionCode", HBAssetMgr.assetMgrVersionCode());
         params.put("channelId", AppConstants.CHANNELID);
         params.put("deviceID", CmmnHelper.getDeviceID());
-        HttpManager.getInstance().postWithJson(szUrl, JSON.toJSONString(params), new HttpManager.MyCallBack() {
+        HttpManager.getInstance().postWithJson(szUrl, JSON.toJSONString(params), new HttpManager.HttpCallBack() {
             @Override
             public void onSuccess(String rsp) {
                 callBack.onLaunchCallBack(0,rsp);

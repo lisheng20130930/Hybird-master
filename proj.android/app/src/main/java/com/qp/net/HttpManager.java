@@ -36,17 +36,17 @@ public class HttpManager {
         return instance;
     }
 
-    public void get(String url, MyCallBack callBack) {
+    public void get(String url, HttpCallBack callBack) {
         Request request = bulidRequestForGet(url);
         requestNetWork(request, callBack);
     }
 
-    public void postWithFormData(String url, Map<String, String> parms, MyCallBack callBack) {
+    public void postWithFormData(String url, Map<String, String> parms, HttpCallBack callBack) {
         Request request = bulidRequestForPostByForm(url, parms);
         requestNetWork(request, callBack);
     }
 
-    public void postWithJson(String url, String json, MyCallBack callBack) {
+    public void postWithJson(String url, String json, HttpCallBack callBack) {
         Request request = bulidRequestForPostByJson(url, json);
         requestNetWork(request, callBack);
     }
@@ -81,7 +81,7 @@ public class HttpManager {
                 .build();
     }
 
-    private void requestNetWork(Request request, MyCallBack callBack) {
+    private void requestNetWork(Request request, HttpCallBack callBack) {
         mOkHttpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -98,7 +98,7 @@ public class HttpManager {
         });
     }
 
-    public interface MyCallBack {
+    public interface HttpCallBack {
         void onSuccess(String rsp);
         void onError();
     }
