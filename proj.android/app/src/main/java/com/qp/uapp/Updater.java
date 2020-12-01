@@ -12,7 +12,6 @@ import com.qp.hybird.HBAssetMgr;
 import com.qp.net.HttpManager;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,8 +25,8 @@ public class Updater {
         params.put("deviceID", CmmnHelper.getDeviceID());
         HttpManager.getInstance().postWithJson(szUrl, JSON.toJSONString(params), new HttpManager.MyCallBack() {
             @Override
-            public void onSuccess(Response response) throws IOException {
-                callBack.onLaunchCallBack(0,response.body().string());
+            public void onSuccess(String rsp) {
+                callBack.onLaunchCallBack(0,rsp);
             }
             @Override
             public void onError() {

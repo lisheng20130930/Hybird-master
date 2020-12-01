@@ -90,7 +90,7 @@ public class HttpManager {
             @Override
             public void onResponse(Call call, Response response) throws IOException{
                 if (response.isSuccessful()) {
-                    callBack.onSuccess(response);
+                    callBack.onSuccess(response.body().string());
                 } else {
                     callBack.onError();
                 }
@@ -99,7 +99,7 @@ public class HttpManager {
     }
 
     public interface MyCallBack {
-        void onSuccess(Response response) throws IOException;
+        void onSuccess(String rsp);
         void onError();
     }
 }
