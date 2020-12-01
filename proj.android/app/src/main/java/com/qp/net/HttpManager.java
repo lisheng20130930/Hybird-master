@@ -18,7 +18,7 @@ public class HttpManager {
     private OkHttpClient mOkHttpClient;
 
     private HttpManager() {
-        mOkHttpClient = (new OkHttpClient()).newBuilder()
+        mOkHttpClient = new OkHttpClient.Builder()
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(10, TimeUnit.SECONDS)
                 .writeTimeout(30, TimeUnit.SECONDS)
