@@ -228,9 +228,9 @@ public class LaunchActivity extends EsActivity implements Updater.ILaunchCallBac
         pBar.setProgress(0);
         pBar.setMax(100);
         pBar.show();
-        FileDownload.download(szURL, SAVE_PATH, new FileDownload.OnDownloadListener() {
+        FileDownload.getInstance().download(szURL, SAVE_PATH, new FileDownload.OnDownloadListener() {
             @Override
-            public void onDownloadSuccess(String filePathName) {
+            public void onDownloadSuccess() {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -246,8 +246,8 @@ public class LaunchActivity extends EsActivity implements Updater.ILaunchCallBac
             }
 
             @Override
-            public void onDownloadFailed(Exception e) {
-                Logger.log("[Trace@LaunchActivity] thread download apk ERROR. URL="+szURL+"errorMsg="+e.getMessage());
+            public void onDownloadFailed() {
+                Logger.log("[Trace@LaunchActivity] thread download apk ERROR");
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {

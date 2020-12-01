@@ -99,7 +99,7 @@ public class HttpManager {
     }
 
     public interface MyCallBack {
-        void onSuccess(Response response);
+        void onSuccess(Response response) throws IOException;
         void onError();
     }
 }

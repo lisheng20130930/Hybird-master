@@ -6,12 +6,17 @@ import android.net.Uri;
 import android.os.Build;
 import android.support.v4.content.FileProvider;
 
+import com.alibaba.fastjson.JSON;
 import com.qp.hybird.BuildConfig;
 import com.qp.hybird.HBAssetMgr;
+import com.qp.net.HttpManager;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import okhttp3.Response;
 
 public class Updater {
     public static void appLaunch(String szUrl, ILaunchCallBack callBack){
@@ -19,10 +24,14 @@ public class Updater {
         params.put("versionCode", HBAssetMgr.assetMgrVersionCode());
         params.put("channelId", AppConstants.CHANNELID);
         params.put("deviceID", CmmnHelper.getDeviceID());
-        HttpManager.request("POST", szUrl, params, new HttpManager.HttpCallBack() {
+        HttpManager.getInstance().postWithJson(szUrl, JSON.toJSONString(params), new HttpManager.MyCallBack() {
             @Override
-            public void handle(int status, String res) {
-                callBack.onLaunchCallBack((200==status)?0:(-1),res);
+            public void onSuccess(Response response) throws IOException {
+                callBack.onLaunchCallBack(0,response.body().string());
+            }
+            @Override
+            public void onError() {
+                callBack.onLaunchCallBack((-1),null);
             }
         });
     }
