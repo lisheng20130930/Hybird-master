@@ -6,23 +6,32 @@ import android.net.Uri;
 import android.os.Build;
 import android.support.v4.content.FileProvider;
 
-import com.alibaba.fastjson.JSON;
 import com.qp.hybird.BuildConfig;
 import com.qp.hybird.HBAssetMgr;
 import com.qp.net.HttpManager;
 
+import org.json.JSONObject;
+
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 
 
 public class Updater {
     public static void appLaunch(String szUrl, ILaunchCallBack callBack){
-        Map<String,Object> params = new HashMap<>();
-        params.put("versionCode", HBAssetMgr.assetMgrVersionCode());
-        params.put("channelId", AppConstants.CHANNELID);
-        params.put("deviceID", CmmnHelper.getDeviceID());
-        HttpManager.getInstance().postWithJson(szUrl, JSON.toJSONString(params), new HttpManager.HttpCallBack() {
+        String jsonStr = null;
+        try {
+            JSONObject json = new JSONObject();
+            json.put("versionCode", HBAssetMgr.assetMgrVersionCode());
+            json.put("channelId", AppConstants.CHANNELID);
+            json.put("deviceID", CmmnHelper.getDeviceID());
+            jsonStr = json.toString();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        if(null==jsonStr){
+            callBack.onLaunchCallBack(-1,null);
+            return;
+        }
+        HttpManager.getInstance().postWithJson(szUrl, jsonStr, new HttpManager.HttpCallBack() {
             @Override
             public void onSuccess(String rsp) {
                 callBack.onLaunchCallBack(0,rsp);
